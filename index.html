@@ -1,0 +1,259 @@
+<!DOCTYPE html><html lang="en-GB"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Log a load</title>
+<meta name="theme-color" content="#2e6b30">
+<script>/* iPhone keeps the link (with the driver's PIN) only when the manifest has no start_url */(function(){var l=document.createElement("link");l.rel="manifest";l.href=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)?"manifest-ios.webmanifest":"manifest.webmanifest";document.head.appendChild(l);})();</script>
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Log a load"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f3;color:#1f2a1f;font-size:17px}
+.bar{background:#2e6b30;color:#fff;padding:14px 16px}.bar h1{margin:0;font-size:22px}.bar .brand{font-size:12px;font-weight:bold;letter-spacing:.4px;margin:0 0 3px}.bar div{opacity:.95;font-size:14px;margin-top:2px}
+body.off .bar{background:#b26a00}
+.wrap{padding:12px;max-width:640px;margin:0 auto}
+.priv{font-size:13px;color:#444;margin:0 0 10px;line-height:1.35}.priv a{color:#2e6b30;font-weight:bold}
+.fmap{display:block;text-align:center;background:#fff;border:2px solid #2e6b30;color:#2e6b30;border-radius:10px;padding:11px;font-weight:bold;text-decoration:none;margin:0 0 10px}
+.card{background:#fff;border:1px solid #d5ddd2;border-radius:10px;padding:12px;margin:0 0 12px}
+label.q{display:block;font-weight:bold;margin:14px 0 5px}label.q:first-child{margin-top:2px}.help{font-size:13px;color:#555;margin:-2px 0 6px}
+input[type=text],input[type=time],input[type=date],select,textarea{width:100%;font-size:18px;padding:10px;border:1px solid #9fb39a;border-radius:8px;background:#fff;min-height:48px}
+textarea{min-height:70px}
+.inl{display:flex;gap:8px}.inl input{flex:1}.inl button{flex:0 0 auto}
+.yn{display:flex;gap:8px}.yn label{flex:1;border:2px solid #9fb39a;border-radius:8px;padding:11px;text-align:center;font-weight:bold;background:#fff}.yn input{display:none}.yn label.on{border-color:#2e6b30;background:#e6f2e2}
+.conf{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:15px}.conf input{width:26px;height:26px;flex:0 0 26px}
+button{font-size:17px;min-height:48px;border-radius:9px;border:2px solid #2e6b30;background:#fff;color:#2e6b30;padding:0 14px;font-weight:bold}
+button.big{display:block;width:100%;min-height:58px;font-size:20px;margin-top:10px}
+button.go{background:#2e6b30;color:#fff}button.later{background:#fff4e0;border-color:#b26a00;color:#7a4800}body.off button.later{background:#b26a00;color:#fff}
+button.grey{border-color:#888;color:#444}button:disabled{opacity:.5}
+.err{background:#fdecea;border:1px solid #c62828;color:#8e1c1c;border-radius:8px;padding:10px;margin:10px 0;font-weight:bold}
+.amber{background:#fff4e0;border:2px solid #b26a00;border-radius:12px;padding:16px;margin:0 0 12px}.amber h2{margin:0 0 6px;color:#7a4800;font-size:24px}
+.green{background:#e6f2e2;border:2px solid #2e6b30;border-radius:12px;padding:16px;margin:0 0 12px}.green h2{margin:0 0 6px;color:#2e6b30;font-size:24px}
+.wait{background:#fff4e0;border:1px solid #b26a00;border-radius:10px;padding:10px 12px;margin:0 0 12px}.wait b{color:#7a4800}.wait ul{margin:6px 0;padding-left:20px;font-size:14px}
+.edit{background:#e8f0fb;border:2px solid #1d4f91;border-radius:10px;padding:10px 12px;margin:0 0 12px}
+.mine .ld{border-top:1px solid #e1e7de;padding:9px 0;display:flex;justify-content:space-between;gap:8px;align-items:center}.mine .ld:first-of-type{border-top:0}.mine .s{font-size:14px;color:#555}
+.hide{display:none!important}h3{margin:0 0 6px;font-size:17px}.small{font-size:13px;color:#555}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px}#modal .box{background:#fff;border-radius:12px;padding:16px;max-width:420px;width:100%}
+</style></head><body>
+<div class="bar"><div class="brand" id="brand"></div><h1 id="title">Log a load</h1><div id="sub"></div></div>
+<div class="wrap">
+<p class="priv" id="priv"></p>
+<div id="maps"></div>
+<div id="pinmsg"></div>
+<div id="wait" class="wait hide"></div>
+<div id="amber" class="amber hide"><h2>&#128245; No signal</h2><p id="amtext" style="margin:0 0 6px">Load saved on this phone. It will send when you&#39;re back in signal.</p><p class="small" id="amcount"></p><button class="big go" id="amnext">Log another load</button><button class="big grey" id="amtry">Try sending now</button></div>
+<div id="green" class="green hide"><h2 id="grh">&#10004; Load sent</h2><p id="grtext" style="margin:0"></p><button class="big go" id="grnext">Log another load</button></div>
+<div id="editbox" class="edit hide"><h3 id="edith">Editing a load</h3><div class="small">Change what was wrong, type the reason, then press Send correction. The first version is kept, marked as replaced.</div><label class="q" for="reason">Reason for the change</label><textarea id="reason" placeholder="e.g. wrong field, typed 22 instead of 18"></textarea></div>
+<div id="formcard" class="card">
+ <div id="drvwrap"><label class="q" for="drv">Driver</label><div class="help" id="drvhelp"></div><div id="drvfixed" class="hide" style="font-weight:bold;font-size:18px"></div><select id="drv"></select><input type="text" id="drvo" class="hide" placeholder="Type your name" style="margin-top:6px"></div>
+ <label class="q" for="trc">Tractor</label><select id="trc"></select><input type="text" id="trco" class="hide" placeholder="Type the registration" style="margin-top:6px">
+ <div id="wtnwrap" class="hide"><label class="q" for="wtn">Waste transfer note (WTN) number</label><div class="help" id="wtnhelp"></div><input type="text" id="wtn" autocapitalize="characters"></div>
+ <label class="q" for="farm">Farm</label><div class="help" id="farmhelp">Not on the list? Choose Other and type the farm name.</div><select id="farm"></select><input type="text" id="farmo" class="hide" placeholder="Type the farm name" style="margin-top:6px">
+ <div id="fieldwrap"><label class="q" for="fld">Field no.</label><div class="help" id="fldhelp"></div><select id="fldsel" class="hide"></select><input type="text" id="fld"><input type="text" id="fldo" class="hide" placeholder="Other &ndash; where?" style="margin-top:6px"></div>
+ <label class="q" for="ld">Time loaded</label><div class="inl"><input type="time" id="ld"><button type="button" class="grey" data-now="ld">Now</button></div>
+ <label class="q" for="ar">Time arrived at farm</label><div class="inl"><input type="time" id="ar"><button type="button" class="grey" data-now="ar">Now</button></div>
+ <label class="q" for="dt">Date (only if not today)</label><input type="date" id="dt">
+ <label class="q" for="tn">Tonnes</label><div class="help" id="tnhelp"></div><input type="text" id="tn" inputmode="decimal">
+ <label class="q">Weighbridge used?</label><div class="help">No = estimated weight</div><div class="yn"><label id="wbNo" class="on"><input type="radio" name="wb" value="No" checked>No</label><label id="wbYes"><input type="radio" name="wb" value="Yes">Yes</label></div>
+ <label class="conf"><input type="checkbox" id="cf"><span id="cftext"></span></label>
+ <div id="ferr"></div>
+ <button class="big go" id="send">Send load</button>
+ <button class="big later" id="later">Save for later</button>
+ <button class="big grey" id="again">Start again</button>
+ <button class="big grey hide" id="canceledit">Cancel edit</button>
+</div>
+<div id="minecard" class="card mine hide"><h3>Your loads today</h3><div class="small" style="margin-bottom:4px">You can edit your own loads until midnight on the day you logged them. After that, tell your manager.</div><div id="mine"></div></div>
+<p class="small" id="foot"></p><p class="small" id="appst"></p>
+</div>
+<div id="modal"><div class="box"><p id="mtext" style="margin-top:0"></p><button class="big go" id="myes">Yes</button><button class="big grey" id="mno">No</button></div></div>
+<script>
+var CFG={defId:"AKfycbz306xIBv-9pU4joIWxETYS2Z7u1f7VvKnZAx1hJSKjLLzJ0Ub1fOwS7tbv99_jtVM4",ver:"13.0"};
+function qp(n){var m=location.search.match(new RegExp("[?&]"+n+"=([^&#]*)"));return m?decodeURIComponent(m[1].replace(/\+/g," ")):null;}
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
+var A=(function(){
+ var a=qp("a"),p=qp("p"),t=qp("t"),url;
+ if(a&&/^[A-Za-z0-9_-]{20,120}$/.test(a))lsSet("wl-a",a);else a=lsGet("wl-a")||CFG.defId;
+ if(p!==null){p=p.replace(/[^0-9]/g,"").slice(0,10);lsSet("wl-p-"+a,p);}else p=lsGet("wl-p-"+a)||"";
+ url="https://script.google.com/macros/s/"+a+"/exec";
+ if(t&&/^(localhost|127\.0\.0\.1)$/.test(location.hostname)){lsSet("wl-t",t);}else t=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?lsGet("wl-t"):null;
+ if(t)url=t;   /* local testing only */
+ return {id:a,pin:p,url:url,dkey:"wl-d-"+a+"-"+p};
+})();
+function loadCached(){try{var s=lsGet(A.dkey);var d=s?JSON.parse(s):null;if(d&&d.ok)return d;}catch(e){}return null;}
+var D=loadCached()||{ok:false,none:true,brand:"Waste load recording",error:"Open this app once while you have signal, so it can load your lists. After that it works with no signal."};
+D.pin=A.pin;D.qkey="pwq-"+A.id.slice(-12)+"-";
+if(D.ok&&D.today&&D.today!==isoToday())D.mine=[];   /* yesterday's loads cannot be edited */
+var pendingD=null;
+var $=function(i){return document.getElementById(i);};
+var memQ=[],memP=[],storageOk=true,sending=false,editing=null,lastMine=D.mine||[];
+function lsKey(k){return (D.qkey||"wlq")+k;}
+function getQ(){try{var s=localStorage.getItem(lsKey(""));return s?JSON.parse(s):[];}catch(e){storageOk=false;return memQ;}}
+function setQ(q){memQ=q;try{localStorage.setItem(lsKey(""),JSON.stringify(q));}catch(e){storageOk=false;}showWait();}
+function getP(){try{var s=localStorage.getItem(lsKey("-p"));return s?JSON.parse(s):[];}catch(e){return memP;}}
+function setP(p){memP=p;try{localStorage.setItem(lsKey("-p"),JSON.stringify(p));}catch(e){}showWait();}
+try{localStorage.setItem(lsKey("-t"),"1");localStorage.removeItem(lsKey("-t"));}catch(e){storageOk=false;}
+function txt(el,t){el.textContent=t;return el;}
+function el(tag,cls,t){var e=document.createElement(tag);if(cls)e.className=cls;if(t!==undefined)e.textContent=t;return e;}
+function pad(n){return (n<10?"0":"")+n;}
+function nowHM(){var d=new Date();return pad(d.getHours())+":"+pad(d.getMinutes());}
+function isoToday(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+function newId(k){return k+Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+function online(){return navigator.onLine!==false;}
+function ask(t,yes){$("mtext").textContent=t;$("modal").style.display="flex";$("myes").onclick=function(){$("modal").style.display="none";yes();};$("mno").onclick=function(){$("modal").style.display="none";};}
+function fill(sel,vals,withOther){sel.innerHTML="";var o=el("option","","Choose\u2026");o.value="";sel.appendChild(o);vals.forEach(function(v){var x=el("option","",v);x.value=v;sel.appendChild(x);});if(withOther){var y=el("option","","Other");y.value="__other";sel.appendChild(y);}}
+function farmObj(n){for(var i=0;i<(D.farms||[]).length;i++)if(D.farms[i].name===n)return D.farms[i];return null;}
+function setup(){
+ $("priv").innerHTML="";$("maps").innerHTML="";$("pinmsg").innerHTML="";$("formcard").classList.remove("hide");
+ txt($("brand"),(D.brand||"Waste load recording").toUpperCase());
+ if(!D.ok){$("pinmsg").appendChild(el("div","err",D.error||"The page could not load."));$("formcard").classList.add("hide");netShow();showWait();return;}
+ txt($("sub"),(D.haulier||"")+(D.driver?" \u2013 "+D.driver:""));
+ var pv=$("priv");pv.appendChild(document.createTextNode("Privacy: "+D.privacyText+" "));
+ if(D.privacyUrl){var a=el("a","","Privacy notice");a.href=D.privacyUrl;a.target="_blank";a.rel="noopener noreferrer";pv.appendChild(a);}else pv.appendChild(document.createTextNode("Ask your manager for the privacy notice."));
+ if(D.maps){var m=el("a","fmap","\uD83D\uDDFA\uFE0F "+D.mapsLabel);m.href=D.maps;m.target="_blank";m.rel="noopener noreferrer";$("maps").appendChild(m);}
+ if(D.pinState==="left"||D.pinState==="unknown"){$("pinmsg").appendChild(el("div","err","This link is not active any more. Ask your manager for your new link. Any loads waiting on this phone can still be sent."));$("formcard").classList.add("hide");}
+ var dl=(D.drivers||[]).slice();if(D.driver&&dl.indexOf(D.driver)<0)dl.unshift(D.driver);
+ if(dl.length){fill($("drv"),dl,true);$("drv").classList.remove("hide");$("drvo").classList.add("hide");}else{$("drv").classList.add("hide");$("drvo").classList.remove("hide");}
+ txt($("drvhelp"),D.driver?"Logging a load for someone else? Choose their name (or Other and type it).":"Choose your name. Not on the list? Choose Other and type it.");
+ if((D.tractors||[]).length)fill($("trc"),D.tractors,true);else{$("trc").classList.add("hide");$("trco").classList.remove("hide");}
+ if(D.wtnOwn){$("wtnwrap").classList.remove("hide");txt($("wtnhelp"),D.wtnHelp||"");}
+ if((D.farms||[]).length)fill($("farm"),D.farms.map(function(f){return f.name;}),true);else{$("farm").classList.add("hide");$("farmo").classList.remove("hide");txt($("farmhelp"),"Type the farm name");}
+ if(!D.fieldOn)$("fieldwrap").classList.add("hide");
+ txt($("cftext"),D.confirmText);
+ txt($("tnhelp"),D.usual?"Already filled in by your manager. Only change it if this load is different.":"The weight of this load in tonnes.");
+ $("drv").onchange=function(){$("drvo").classList.toggle("hide",this.value!=="__other");};
+ $("trc").onchange=function(){$("trco").classList.toggle("hide",this.value!=="__other");};
+ $("farm").onchange=farmChanged;$("fldsel").onchange=function(){$("fldo").classList.toggle("hide",this.value!=="Other");};
+ Array.prototype.forEach.call(document.querySelectorAll("[data-now]"),function(b){b.onclick=function(){$(b.getAttribute("data-now")).value=nowHM();};});
+ Array.prototype.forEach.call(document.querySelectorAll("input[name=wb]"),function(r){r.onchange=wbShow;});
+ $("send").onclick=onSend;$("later").onclick=onLater;$("again").onclick=onAgain;$("canceledit").onclick=function(){ask("Cancel this edit? The load stays as it was.",function(){endEdit();clearForm();});};
+ $("amnext").onclick=function(){hideScreens();if(pendingD){useData(pendingD);}clearForm();window.scrollTo(0,0);};$("amtry").onclick=function(){flush(true);};
+ $("grnext").onclick=function(){hideScreens();if(pendingD){useData(pendingD);}clearForm();window.scrollTo(0,0);};
+ clearForm();renderMine(lastMine);netShow();showWait();
+ txt($("foot"),"Lists last loaded "+D.dataAt+" (UK time). They update by themselves whenever the app is open with signal.");
+}
+function wbShow(){var y=document.querySelector("input[name=wb][value=Yes]").checked;$("wbYes").className=y?"on":"";$("wbNo").className=y?"":"on";}
+function farmChanged(){
+ var v=$("farm").value;$("farmo").classList.toggle("hide",!( v==="__other"||!(D.farms||[]).length));
+ if(!D.fieldOn)return;
+ var f=v&&v!=="__other"?farmObj(v):null,s=$("fldsel");
+ $("fldo").classList.add("hide");
+ if(f&&f.options){fill(s,f.options,false);s.classList.remove("hide");$("fld").classList.add("hide");txt($("fldhelp"),"Choose the field number from the farm map. Hard dump or Other are at the end of the list.");}
+ else{s.classList.add("hide");$("fld").classList.remove("hide");txt($("fldhelp"),f||!v?D.fieldHelp:"The farm or its fields are not on the list: type the field number from the farm map, or Hard dump.");}
+}
+function clearForm(keep){
+ $("drv").value=D.driver||"";$("drvo").value="";$("drvo").classList.toggle("hide",!$("drv").classList.contains("hide"));
+ if(!keep){$("trc").value="";$("trco").value="";$("trco").classList.add("hide");if((D.tractors||[]).length===0)$("trco").classList.remove("hide");}
+ $("wtn").value="";$("farm").value="";$("farmo").value="";farmChanged();$("fld").value="";$("fldo").value="";$("fldsel").value="";
+ $("ld").value="";$("ar").value="";$("dt").value="";$("tn").value=D.usual||"";
+ document.querySelector("input[name=wb][value=No]").checked=true;wbShow();$("cf").checked=false;$("ferr").innerHTML="";$("reason").value="";
+}
+function val(selId,otherId){var s=$(selId);if(s.classList.contains("hide"))return $(otherId).value.trim();return s.value==="__other"?$(otherId).value.trim():s.value;}
+function collect(){
+ var L={driver:val("drv","drvo"),tractor:val("trc","trco"),wtn:$("wtn").value.trim(),farm:val("farm","farmo"),field:"",fieldOther:"",
+  loaded:$("ld").value,arrived:$("ar").value,date:$("dt").value,tonnes:$("tn").value.trim(),weighbridge:document.querySelector("input[name=wb][value=Yes]").checked?"Yes":"No",confirm:$("cf").checked};
+ if(D.fieldOn){if(!$("fldsel").classList.contains("hide")){L.field=$("fldsel").value;if(L.field==="Other")L.fieldOther=$("fldo").value.trim();}else L.field=$("fld").value.trim();}
+ return L;
+}
+function check(L){
+ var e=[];if(!L.driver)e.push("your name");if(!L.tractor)e.push("the tractor");if(D.wtnOwn&&!L.wtn)e.push("the WTN number");if(!L.farm)e.push("the farm");
+ if(D.fieldOn&&!L.field)e.push("the field no.");if(D.fieldOn&&L.field==="Other"&&!L.fieldOther)e.push("where (Other)");
+ if(!L.loaded)e.push("the time loaded");if(!L.arrived)e.push("the time arrived");
+ if(!/^\d+([.,]\d+)?$/.test(L.tonnes))e.push("the tonnes (a number)");if(!L.confirm)e.push("the tick to confirm");
+ if(editing&&$("reason").value.trim().length<3)e.push("the reason for the change");
+ return e;
+}
+function showErr(list){$("ferr").innerHTML="";if(list.length)$("ferr").appendChild(el("div","err","Please fill in: "+list.join(", ")+"."));}
+function label(it){var L=it.load||{};return (it.kind==="edit"?"Correction of "+it.wtn+": ":"")+(L.farm||"?")+(L.field?" "+(L.field==="Other"?L.fieldOther:L.field):"")+", loaded "+(L.loaded||"?")+", "+(L.tonnes||"?")+" t (saved "+(it.savedHM||"")+")";}
+function makeItem(){
+ var L=collect(),err=check(L);showErr(err);if(err.length)return null;
+ var it={id:newId(editing?"E":"L"),kind:editing?"edit":"load",pin:D.pin||"",load:L,savedAt:new Date().toISOString(),savedDay:isoToday(),savedHM:nowHM()};
+ if(editing){it.row=editing.row;it.wtn=editing.wtn;it.reason=$("reason").value.trim();}
+ return it;
+}
+function queueAdd(it){var q=getQ();for(var i=0;i<q.length;i++)if(q[i].id===it.id)return;it.later=true;q.push(it);setQ(q);}
+function queueDel(id){setQ(getQ().filter(function(x){return x.id!==id;}));}
+function hideScreens(){$("amber").classList.add("hide");$("green").classList.add("hide");$("formcard").classList.remove("hide");if(editing)$("editbox").classList.remove("hide");}
+function showAmber(msg){
+ endEdit();$("formcard").classList.add("hide");$("green").classList.add("hide");$("amber").classList.remove("hide");
+ txt($("amtext"),msg||"Load saved on this phone. It will send when you're back in signal.");
+ var n=getQ().length;txt($("amcount"),n+" load"+(n===1?"":"s")+" waiting on this phone."+(storageOk?"":" WARNING: this phone cannot keep saved loads if the page is closed. Keep this page open until they have sent."));window.scrollTo(0,0);
+}
+function showGreen(it,res){
+ endEdit();$("formcard").classList.add("hide");$("amber").classList.add("hide");$("green").classList.remove("hide");
+ txt($("grh"),it.kind==="edit"?"\u2714 Correction sent":"\u2714 Load sent");
+ txt($("grtext"),it.kind==="edit"?"New load number "+res.wtn+". It replaces "+it.wtn+", which is kept, marked as replaced.":"Load number "+res.wtn+"."+(D.driver&&it.load&&it.load.driver&&it.load.driver!==D.driver?" Logged by "+D.driver+" for "+it.load.driver+".":""));window.scrollTo(0,0);
+}
+function api(body,ms){
+ return new Promise(function(res,rej){var done=false,t=setTimeout(function(){if(!done){done=true;rej(new Error("timeout"));}},ms||25000);
+  fetch(A.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body),redirect:"follow",credentials:"omit",cache:"no-store"})
+   .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.text();})
+   .then(function(s){var j=JSON.parse(s);if(done){if(body.api==="send"&&j&&j.ok){queueDel(body.item.id);if(j.mine)renderMine(j.mine);}return;}done=true;clearTimeout(t);res(j||{});})
+   .catch(function(e){if(done)return;done=true;clearTimeout(t);rej(e);});});
+}
+function call(it,ok,fail){api({api:"send",item:it}).then(ok,fail);}
+function dirty(){if(!$("formcard")||$("formcard").classList.contains("hide"))return false;var L=collect();return !!(L.tractor||L.farm||L.field||L.loaded||L.arrived||L.wtn||L.confirm||editing);}
+function useData(d){if(!d||!d.ok)return;d.pin=A.pin;d.qkey=D.qkey;lsSet(A.dkey,JSON.stringify(d));if(dirty()||!$("amber").classList.contains("hide")||!$("green").classList.contains("hide")){pendingD=d;return;}D=d;pendingD=null;lastMine=D.mine||[];setup();}
+function refresh(){if(!online())return;api({api:"data",p:A.pin},20000).then(useData,function(){netShow();});}
+function onSend(){
+ if(sending)return;var it=makeItem();if(!it)return;
+ if(!online()){queueAdd(it);showAmber();return;}
+ sending=true;$("send").disabled=true;txt($("send"),"Sending\u2026");
+ call(it,function(r){sending=false;$("send").disabled=false;txt($("send"),editing?"Send correction":"Send load");
+  if(r.ok){if(r.mine)renderMine(r.mine);showGreen(it,r);flush();}
+  else if(r.rejected){showErr([]);$("ferr").appendChild(el("div","err",r.error||"Not accepted."));}
+  else{queueAdd(it);showAmber();}
+ },function(){sending=false;$("send").disabled=false;txt($("send"),editing?"Send correction":"Send load");queueAdd(it);showAmber();});
+}
+function onLater(){var it=makeItem();if(!it)return;queueAdd(it);showAmber(online()?"Load saved on this phone. It will send by itself in a moment, or press Try sending now.":"No signal. Load saved on this phone. It will send when you're back in signal.");setTimeout(function(){flush();},1500);}
+function onAgain(){ask("Start again? Everything typed on this load will be cleared.",function(){clearForm();window.scrollTo(0,0);});}
+var flushing=false;
+function flush(manual){
+ if(flushing)return;var q=getQ();if(!q.length){if(manual)netShow();return;}
+ if(!online()&&!manual)return;
+ flushing=true;var it=q[0];txt($("waitbtnlabel")||el("span"),"Sending\u2026");
+ call(it,function(r){flushing=false;
+  if(r.ok){queueDel(it.id);if(r.mine)renderMine(r.mine);flush();if(!$("amber").classList.contains("hide")&&!getQ().length){$("amcount").textContent="All saved loads have now been sent.";$("amtext").textContent="Back in signal: your saved loads have been sent.";}}
+  else if(r.rejected){queueDel(it.id);var p=getP();p.push({label:label(it),error:r.error});setP(p);flush();}
+  else showWait();
+ },function(){flushing=false;showWait();});
+}
+function showWait(){
+ var w=$("wait");if(!w)return;var q=getQ(),p=getP();w.innerHTML="";
+ if(!q.length&&!p.length){w.classList.add("hide");return;}
+ w.classList.remove("hide");
+ if(q.length){w.appendChild(el("b","","\u23F3 "+q.length+" load"+(q.length===1?"":"s")+" waiting to send"));var ul=el("ul");q.forEach(function(it){ul.appendChild(el("li","",label(it)));});w.appendChild(ul);
+  var b=el("button","go","Send now");b.id="waitbtnlabel";b.onclick=function(){flush(true);};w.appendChild(b);
+  w.appendChild(el("div","small",online()?"They send by themselves when there is signal. Keep the app open, or open it again later.":"No signal just now. They send by themselves when you're back in signal."));}
+ p.forEach(function(x,i){var d=el("div","err","Not accepted: "+x.label+" \u2013 "+x.error);var ok=el("button","grey","OK");ok.style.marginLeft="8px";ok.onclick=function(){var pp=getP();pp.splice(i,1);setP(pp);};d.appendChild(ok);w.appendChild(d);});
+}
+function netShow(){document.body.classList.toggle("off",!online());txt($("later"),online()?"Save for later":"No signal \u2013 Save for later");showWait();}
+function renderMine(list){
+ lastMine=list||[];var box=$("mine");box.innerHTML="";
+ if(!D.pin||D.pinState!=="ok"){$("minecard").classList.add("hide");return;}
+ $("minecard").classList.remove("hide");
+ if(!lastMine.length){box.appendChild(el("div","small","No loads sent today yet."));return;}
+ lastMine.forEach(function(r){var d=el("div","ld"),t=el("div");t.appendChild(el("div","",r.wtn+" \u2013 "+r.farm+(r.field?" "+(r.field==="Other"?r.fieldOther:r.field):"")));t.appendChild(el("div","s","Loaded "+r.loaded+", "+(r.tonnes||"usual")+" t, sent "+r.at));d.appendChild(t);
+  var b=el("button","","Edit");b.onclick=function(){startEdit(r);};d.appendChild(b);box.appendChild(d);});
+}
+function setSel(selId,otherId,v,list){var s=$(selId);if(s.classList.contains("hide")){$(otherId).value=v||"";return;}if(!v){s.value="";return;}if((list||[]).indexOf(v)>=0){s.value=v;$(otherId).classList.add("hide");}else{s.value="__other";$(otherId).value=v;$(otherId).classList.remove("hide");}}
+function startEdit(r){
+ hideScreens();clearForm();editing=r;
+ setSel("drv","drvo",r.driver,[].map.call($("drv").options,function(o){return o.value;}));
+ setSel("trc","trco",r.tractor,D.tractors);$("wtn").value=r.wtn;
+ setSel("farm","farmo",r.farm,(D.farms||[]).map(function(f){return f.name;}));farmChanged();
+ if(D.fieldOn){if(!$("fldsel").classList.contains("hide")){var opts=[].map.call($("fldsel").options,function(o){return o.value;});if(opts.indexOf(r.field)>=0)$("fldsel").value=r.field;else{$("fldsel").value="Other";$("fldo").value=r.field==="Other"?r.fieldOther:r.field;}$("fldo").classList.toggle("hide",$("fldsel").value!=="Other");}else $("fld").value=r.field==="Other"?("Other \u2013 "+r.fieldOther):r.field;}
+ $("ld").value=r.loaded;$("ar").value=r.arrived;$("dt").value=r.date||"";$("tn").value=r.tonnes;
+ document.querySelector("input[name=wb][value="+(r.weighbridge==="Yes"?"Yes":"No")+"]").checked=true;wbShow();
+ txt($("edith"),"Editing load "+r.wtn);$("editbox").classList.remove("hide");$("canceledit").classList.remove("hide");$("again").classList.add("hide");
+ txt($("send"),"Send correction");window.scrollTo(0,0);
+}
+function endEdit(){editing=null;$("editbox").classList.add("hide");$("canceledit").classList.add("hide");$("again").classList.remove("hide");txt($("send"),"Send load");}
+window.addEventListener("online",function(){netShow();flush();refresh();});
+window.addEventListener("offline",netShow);
+document.addEventListener("visibilitychange",function(){if(!document.hidden){netShow();flush();refresh();}});
+setInterval(function(){flush();},30000);
+setup();setTimeout(function(){flush();},1200);refresh();
+function appStatus(t){txt($("appst"),t);}
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").then(function(){return navigator.serviceWorker.ready;}).then(function(){appStatus("Ready to use with no signal (app version "+CFG.ver+").");}).catch(function(){appStatus("This phone could not save the app for use with no signal. Keep the app open while you have no signal.");});}
+else appStatus("This browser cannot keep the app for use with no signal. Use Safari on iPhone or Chrome on Android.");
+</script></body></html>
