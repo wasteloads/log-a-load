@@ -40,7 +40,7 @@ button.grey{border-color:#888;color:#444}button:disabled{opacity:.5}
 <div id="maps"></div>
 <div id="pinmsg"></div>
 <div id="wait" class="wait hide"></div>
-<div id="amber" class="amber hide"><h2>&#128245; No signal</h2><p id="amtext" style="margin:0 0 6px">Load saved on this phone. It will send when you&#39;re back in signal.</p><p class="small" id="amcount"></p><button class="big go" id="amnext">Log another load</button><button class="big grey" id="amtry">Try sending now</button></div>
+<div id="amber" class="amber hide"><h2>&#128245; No signal</h2><p id="amtext" style="margin:0 0 6px">Load saved on this phone. It sends as soon as the app is open with signal.</p><p class="small" id="amcount"></p><button class="big go" id="amnext">Log another load</button><button class="big grey" id="amtry">Try sending now</button></div>
 <div id="green" class="green hide"><h2 id="grh">&#10004; Load sent</h2><p id="grtext" style="margin:0"></p><button class="big go" id="grnext">Log another load</button></div>
 <div id="editbox" class="edit hide"><h3 id="edith">Editing a load</h3><div class="small">Change what was wrong, type the reason, then press Send correction. The first version is kept, marked as replaced.</div><label class="q" for="reason">Reason for the change</label><textarea id="reason" placeholder="e.g. wrong field, typed 22 instead of 18"></textarea></div>
 <div id="formcard" class="card">
@@ -66,7 +66,7 @@ button.grey{border-color:#888;color:#444}button:disabled{opacity:.5}
 </div>
 <div id="modal"><div class="box"><p id="mtext" style="margin-top:0"></p><button class="big go" id="myes">Yes</button><button class="big grey" id="mno">No</button></div></div>
 <script>
-var CFG={defId:"AKfycbz306xIBv-9pU4joIWxETYS2Z7u1f7VvKnZAx1hJSKjLLzJ0Ub1fOwS7tbv99_jtVM4",ver:"13.0"};
+var CFG={defId:"AKfycbz306xIBv-9pU4joIWxETYS2Z7u1f7VvKnZAx1hJSKjLLzJ0Ub1fOwS7tbv99_jtVM4",ver:"13.2"};
 function qp(n){var m=location.search.match(new RegExp("[?&]"+n+"=([^&#]*)"));return m?decodeURIComponent(m[1].replace(/\+/g," ")):null;}
 function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
@@ -175,7 +175,7 @@ function queueDel(id){setQ(getQ().filter(function(x){return x.id!==id;}));}
 function hideScreens(){$("amber").classList.add("hide");$("green").classList.add("hide");$("formcard").classList.remove("hide");if(editing)$("editbox").classList.remove("hide");}
 function showAmber(msg){
  endEdit();$("formcard").classList.add("hide");$("green").classList.add("hide");$("amber").classList.remove("hide");
- txt($("amtext"),msg||"Load saved on this phone. It will send when you're back in signal.");
+ txt($("amtext"),msg||"Load saved on this phone. It sends as soon as the app is open with signal.");
  var n=getQ().length;txt($("amcount"),n+" load"+(n===1?"":"s")+" waiting on this phone."+(storageOk?"":" WARNING: this phone cannot keep saved loads if the page is closed. Keep this page open until they have sent."));window.scrollTo(0,0);
 }
 function showGreen(it,res){
@@ -204,7 +204,7 @@ function onSend(){
   else{queueAdd(it);showAmber();}
  },function(){sending=false;$("send").disabled=false;txt($("send"),editing?"Send correction":"Send load");queueAdd(it);showAmber();});
 }
-function onLater(){var it=makeItem();if(!it)return;queueAdd(it);showAmber(online()?"Load saved on this phone. It will send by itself in a moment, or press Try sending now.":"No signal. Load saved on this phone. It will send when you're back in signal.");setTimeout(function(){flush();},1500);}
+function onLater(){var it=makeItem();if(!it)return;queueAdd(it);showAmber(online()?"Load saved on this phone. It will send in a moment while the app is open, or press Try sending now.":"No signal. Load saved on this phone. It sends as soon as the app is open with signal.");setTimeout(function(){flush();},1500);}
 function onAgain(){ask("Start again? Everything typed on this load will be cleared.",function(){clearForm();window.scrollTo(0,0);});}
 var flushing=false;
 function flush(manual){
@@ -223,7 +223,7 @@ function showWait(){
  w.classList.remove("hide");
  if(q.length){w.appendChild(el("b","","\u23F3 "+q.length+" load"+(q.length===1?"":"s")+" waiting to send"));var ul=el("ul");q.forEach(function(it){ul.appendChild(el("li","",label(it)));});w.appendChild(ul);
   var b=el("button","go","Send now");b.id="waitbtnlabel";b.onclick=function(){flush(true);};w.appendChild(b);
-  w.appendChild(el("div","small",online()?"They send by themselves when there is signal. Keep the app open, or open it again later.":"No signal just now. They send by themselves when you're back in signal."));}
+  w.appendChild(el("div","small",online()?"They send while the app is open with signal. Keep the app open, or open it again later.":"No signal just now. They send as soon as the app is open with signal: open the app again once you're back in signal."));}
  p.forEach(function(x,i){var d=el("div","err","Not accepted: "+x.label+" \u2013 "+x.error);var ok=el("button","grey","OK");ok.style.marginLeft="8px";ok.onclick=function(){var pp=getP();pp.splice(i,1);setP(pp);};d.appendChild(ok);w.appendChild(d);});
 }
 function netShow(){document.body.classList.toggle("off",!online());txt($("later"),online()?"Save for later":"No signal \u2013 Save for later");showWait();}
